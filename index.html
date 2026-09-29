@@ -1,0 +1,3049 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>
+    Ameba Mini 語音控制 LED
+</title>
+
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+
+body {
+
+    margin: 0;
+
+    font-family:
+        "Microsoft JhengHei",
+        Arial,
+        sans-serif;
+
+    background: #f3f4f6;
+
+    color: #1f2937;
+}
+
+
+.container {
+
+    width: 92%;
+
+    max-width: 950px;
+
+    margin: 30px auto;
+}
+
+
+h1 {
+
+    text-align: center;
+
+    margin-bottom: 8px;
+}
+
+
+.subtitle {
+
+    text-align: center;
+
+    color: #6b7280;
+
+    margin-bottom: 25px;
+}
+
+
+.card {
+
+    background: white;
+
+    border-radius: 14px;
+
+    padding: 22px;
+
+    margin-bottom: 20px;
+
+    box-shadow:
+        0 4px 15px
+        rgba(0,0,0,0.08);
+}
+
+
+.button-row {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    margin-top: 12px;
+}
+
+
+button {
+
+    border: none;
+
+    border-radius: 8px;
+
+    padding: 12px 18px;
+
+    font-size: 16px;
+
+    cursor: pointer;
+
+    color: white;
+
+    background: #2563eb;
+}
+
+
+button:hover {
+
+    opacity: 0.88;
+}
+
+
+button:disabled {
+
+    background: #9ca3af;
+
+    cursor: not-allowed;
+}
+
+
+#disconnectButton {
+
+    background: #dc2626;
+}
+
+
+#voiceButton {
+
+    background: #7c3aed;
+}
+
+
+#testLeftOn {
+
+    background: #2563eb;
+}
+
+
+#testLeftOff {
+
+    background: #475569;
+}
+
+
+#testRightOn {
+
+    background: #059669;
+}
+
+
+#testRightOff {
+
+    background: #475569;
+}
+
+
+#testBlink {
+
+    background: #9333ea;
+}
+
+
+#testDisconnect {
+
+    background: #dc2626;
+}
+
+
+select {
+
+    padding: 10px;
+
+    font-size: 16px;
+
+    border-radius: 8px;
+
+    border:
+        1px solid #d1d5db;
+
+    margin-bottom: 12px;
+}
+
+
+.info {
+
+    margin-top: 12px;
+
+    padding: 12px;
+
+    border-radius: 8px;
+
+    background: #f1f5f9;
+}
+
+
+.success {
+
+    color: #047857;
+
+    font-weight: bold;
+}
+
+
+.error {
+
+    color: #dc2626;
+
+    font-weight: bold;
+}
+
+
+.warning {
+
+    color: #d97706;
+
+    font-weight: bold;
+}
+
+
+.status-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 20px;
+}
+
+
+.led-box {
+
+    text-align: center;
+
+    padding: 22px;
+
+    border-radius: 12px;
+
+    background: #f8fafc;
+}
+
+
+.led {
+
+    width: 90px;
+
+    height: 90px;
+
+    margin:
+        18px auto;
+
+    border-radius: 50%;
+
+    border:
+        4px solid #4b5563;
+
+    background: #9ca3af;
+
+    transition:
+        background 0.1s,
+        box-shadow 0.1s;
+}
+
+
+.blue-on {
+
+    background: #168cff;
+
+    box-shadow:
+        0 0 30px
+        #168cff;
+}
+
+
+.green-on {
+
+    background: #22c55e;
+
+    box-shadow:
+        0 0 30px
+        #22c55e;
+}
+
+
+.led-off {
+
+    background: #374151;
+
+    box-shadow: none;
+}
+
+
+.unknown {
+
+    background: #9ca3af;
+
+    box-shadow: none;
+}
+
+
+.command-box {
+
+    line-height: 1.9;
+
+    padding: 15px;
+
+    border-radius: 10px;
+
+    background: #f8fafc;
+}
+
+
+.command-title {
+
+    font-weight: bold;
+
+    color: #111827;
+}
+
+
+.disconnect-command {
+
+    color: #dc2626;
+
+    font-weight: bold;
+}
+
+
+#log {
+
+    height: 260px;
+
+    overflow-y: auto;
+
+    background: #111827;
+
+    color: #a7f3d0;
+
+    padding: 15px;
+
+    border-radius: 8px;
+
+    font-family: monospace;
+
+    white-space: pre-wrap;
+
+    font-size: 14px;
+}
+
+
+@media(
+    max-width: 600px
+) {
+
+    .status-grid {
+
+        grid-template-columns:
+            1fr;
+    }
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<h1>
+    Ameba Mini 語音控制 LED
+</h1>
+
+
+<div class="subtitle">
+
+    中文 / English Voice Control
+    →
+    Web Serial
+    →
+    Ameba Mini
+
+</div>
+
+
+
+<!-- ====================================================== -->
+<!-- 1. Serial Connection -->
+<!-- ====================================================== -->
+
+<div class="card">
+
+
+<h2>
+    1. Ameba Mini 連線
+</h2>
+
+
+<div class="button-row">
+
+
+<button id="connectButton">
+
+    連接 Ameba
+
+</button>
+
+
+<button
+    id="disconnectButton"
+    disabled
+>
+
+    中斷連線
+
+</button>
+
+
+</div>
+
+
+<div
+    id="connectionStatus"
+    class="info"
+>
+
+    尚未連線
+
+</div>
+
+
+</div>
+
+
+
+<!-- ====================================================== -->
+<!-- 2. Voice -->
+<!-- ====================================================== -->
+
+<div class="card">
+
+
+<h2>
+    2. 語音控制
+</h2>
+
+
+<div class="command-box">
+
+
+<span class="command-title">
+中文指令
+</span>
+
+<br>
+
+左邊開燈
+
+<br>
+
+左邊關燈
+
+<br>
+
+右邊開燈
+
+<br>
+
+右邊關燈
+
+<br>
+
+閃爍三次
+
+<br>
+
+<span class="disconnect-command">
+通訊中斷
+</span>
+
+
+<br><br>
+
+
+<span class="command-title">
+English Commands
+</span>
+
+<br>
+
+Turn on the left light
+
+<br>
+
+Turn off the left light
+
+<br>
+
+Turn on the right light
+
+<br>
+
+Turn off the right light
+
+<br>
+
+Blink three times
+
+<br>
+
+<span class="disconnect-command">
+Disconnect
+</span>
+
+
+</div>
+
+
+<br>
+
+
+<label for="languageSelect">
+
+    語音辨識語言：
+
+</label>
+
+
+<br>
+
+
+<select id="languageSelect">
+
+
+<option value="zh-TW">
+
+    中文（繁體）
+
+</option>
+
+
+<option value="en-US">
+
+    English
+
+</option>
+
+
+</select>
+
+
+<br>
+
+
+<button id="voiceButton">
+
+    🎤 開始語音辨識
+
+</button>
+
+
+
+<div class="info">
+
+<strong>
+    辨識結果：
+</strong>
+
+
+<span id="speechResult">
+
+    尚未辨識
+
+</span>
+
+</div>
+
+
+
+<div class="info">
+
+<strong>
+    指令執行情形：
+</strong>
+
+
+<span id="commandStatus">
+
+    尚無指令
+
+</span>
+
+</div>
+
+
+</div>
+
+
+
+<!-- ====================================================== -->
+<!-- 3. Manual Test -->
+<!-- ====================================================== -->
+
+<div class="card">
+
+
+<h2>
+    3. 手動測試
+</h2>
+
+
+<p>
+
+手動按鈕與語音指令使用完全相同的控制流程，
+可用來確認 Ameba Serial 與 LED 是否正常。
+
+</p>
+
+
+<div class="button-row">
+
+
+<button id="testLeftOn">
+
+    左邊開燈
+
+</button>
+
+
+<button id="testLeftOff">
+
+    左邊關燈
+
+</button>
+
+
+<button id="testRightOn">
+
+    右邊開燈
+
+</button>
+
+
+<button id="testRightOff">
+
+    右邊關燈
+
+</button>
+
+
+<button id="testBlink">
+
+    閃爍三次
+
+</button>
+
+
+<button id="testDisconnect">
+
+    通訊中斷
+
+</button>
+
+
+</div>
+
+
+</div>
+
+
+
+<!-- ====================================================== -->
+<!-- 4. LED Status -->
+<!-- ====================================================== -->
+
+<div class="card">
+
+
+<h2>
+    4. LED 實際狀態
+</h2>
+
+
+<p>
+
+下面的 LED 狀態只會根據 Ameba 回傳的
+STATE / ACK 更新。
+
+因此網頁不會自己猜測 LED 是否亮起。
+
+</p>
+
+
+<div class="status-grid">
+
+
+<!-- BLUE -->
+
+<div class="led-box">
+
+
+<h3>
+    左邊 / 藍燈
+</h3>
+
+
+<div
+    id="blueLed"
+    class="led unknown"
+>
+</div>
+
+
+<div id="blueStatus">
+
+    未知
+
+</div>
+
+
+</div>
+
+
+
+<!-- GREEN -->
+
+<div class="led-box">
+
+
+<h3>
+    右邊 / 綠燈
+</h3>
+
+
+<div
+    id="greenLed"
+    class="led unknown"
+>
+</div>
+
+
+<div id="greenStatus">
+
+    未知
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+<!-- ====================================================== -->
+<!-- 5. Log -->
+<!-- ====================================================== -->
+
+<div class="card">
+
+
+<h2>
+    5. 通訊紀錄
+</h2>
+
+
+<div id="log">
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+<script>
+
+
+// ==========================================================
+// 全域變數
+// ==========================================================
+
+let port =
+    null;
+
+
+let reader =
+    null;
+
+
+let serialBuffer =
+    "";
+
+
+let pendingTimer =
+    null;
+
+
+let commandPending =
+    false;
+
+
+// ==========================================================
+// DOM
+// ==========================================================
+
+const connectButton =
+    document.getElementById(
+        "connectButton"
+    );
+
+
+const disconnectButton =
+    document.getElementById(
+        "disconnectButton"
+    );
+
+
+const voiceButton =
+    document.getElementById(
+        "voiceButton"
+    );
+
+
+const languageSelect =
+    document.getElementById(
+        "languageSelect"
+    );
+
+
+const testLeftOn =
+    document.getElementById(
+        "testLeftOn"
+    );
+
+
+const testLeftOff =
+    document.getElementById(
+        "testLeftOff"
+    );
+
+
+const testRightOn =
+    document.getElementById(
+        "testRightOn"
+    );
+
+
+const testRightOff =
+    document.getElementById(
+        "testRightOff"
+    );
+
+
+const testBlink =
+    document.getElementById(
+        "testBlink"
+    );
+
+
+const testDisconnect =
+    document.getElementById(
+        "testDisconnect"
+    );
+
+
+const connectionStatus =
+    document.getElementById(
+        "connectionStatus"
+    );
+
+
+const speechResult =
+    document.getElementById(
+        "speechResult"
+    );
+
+
+const commandStatus =
+    document.getElementById(
+        "commandStatus"
+    );
+
+
+const blueLed =
+    document.getElementById(
+        "blueLed"
+    );
+
+
+const greenLed =
+    document.getElementById(
+        "greenLed"
+    );
+
+
+const blueStatus =
+    document.getElementById(
+        "blueStatus"
+    );
+
+
+const greenStatus =
+    document.getElementById(
+        "greenStatus"
+    );
+
+
+const logBox =
+    document.getElementById(
+        "log"
+    );
+
+
+// ==========================================================
+// Log
+// ==========================================================
+
+function addLog(
+    message
+) {
+
+    const time =
+        new Date()
+        .toLocaleTimeString();
+
+
+    logBox.textContent +=
+        "[" +
+        time +
+        "] " +
+        message +
+        "\n";
+
+
+    logBox.scrollTop =
+        logBox.scrollHeight;
+}
+
+
+// ==========================================================
+// 顯示已連線
+// ==========================================================
+
+function showConnected() {
+
+    connectionStatus.innerHTML =
+
+        '<span class="success">' +
+
+        '● Ameba 已連線' +
+
+        '</span>';
+
+
+    connectButton.disabled =
+        true;
+
+
+    disconnectButton.disabled =
+        false;
+}
+
+
+// ==========================================================
+// 顯示未連線
+// ==========================================================
+
+function showDisconnected() {
+
+    connectionStatus.innerHTML =
+
+        '<span class="error">' +
+
+        '● Ameba 未連線' +
+
+        '</span>';
+
+
+    connectButton.disabled =
+        false;
+
+
+    disconnectButton.disabled =
+        true;
+
+
+    // 已經無法從 Ameba 取得真實資料
+
+    setLEDUnknown();
+}
+
+
+// ==========================================================
+// 更新 LED 畫面
+//
+// 這個函式只能由 Ameba 回傳資訊呼叫。
+// ==========================================================
+
+function updateLEDDisplay(
+    blue,
+    green
+) {
+
+    // ======================================================
+    // BLUE
+    // ======================================================
+
+    blueLed.className =
+        "led";
+
+
+    if (
+        blue
+    ) {
+
+        blueLed.classList.add(
+            "blue-on"
+        );
+
+
+        blueStatus.textContent =
+            "亮";
+    }
+
+    else {
+
+        blueLed.classList.add(
+            "led-off"
+        );
+
+
+        blueStatus.textContent =
+            "滅";
+    }
+
+
+    // ======================================================
+    // GREEN
+    // ======================================================
+
+    greenLed.className =
+        "led";
+
+
+    if (
+        green
+    ) {
+
+        greenLed.classList.add(
+            "green-on"
+        );
+
+
+        greenStatus.textContent =
+            "亮";
+    }
+
+    else {
+
+        greenLed.classList.add(
+            "led-off"
+        );
+
+
+        greenStatus.textContent =
+            "滅";
+    }
+}
+
+
+// ==========================================================
+// LED 狀態未知
+// ==========================================================
+
+function setLEDUnknown() {
+
+    blueLed.className =
+        "led unknown";
+
+
+    greenLed.className =
+        "led unknown";
+
+
+    blueStatus.textContent =
+        "未知";
+
+
+    greenStatus.textContent =
+        "未知";
+}
+
+
+// ==========================================================
+// 連接 Ameba
+// ==========================================================
+
+async function connectSerial() {
+
+    if (
+        !("serial" in navigator)
+    ) {
+
+        connectionStatus.innerHTML =
+
+            '<span class="error">' +
+
+            '瀏覽器不支援 Web Serial，' +
+
+            '請使用桌面版 Chrome 或 Edge。' +
+
+            '</span>';
+
+
+        return;
+    }
+
+
+    try {
+
+        // --------------------------------------------------
+        // 選擇 COM Port
+        // --------------------------------------------------
+
+        port =
+            await navigator.serial
+            .requestPort();
+
+
+        // --------------------------------------------------
+        // 開啟 Serial
+        // --------------------------------------------------
+
+        await port.open({
+
+            baudRate:
+                115200
+
+        });
+
+
+        showConnected();
+
+
+        commandStatus.innerHTML =
+
+            '<span class="success">' +
+
+            'Serial 連線成功' +
+
+            '</span>';
+
+
+        addLog(
+            "Serial 已連線，Baud Rate = 115200"
+        );
+
+
+        // --------------------------------------------------
+        // 啟動 Serial Reader
+        // --------------------------------------------------
+
+        readSerial();
+
+
+        // --------------------------------------------------
+        // 查詢 LED 狀態
+        // --------------------------------------------------
+
+        setTimeout(
+            async () => {
+
+                if (
+                    port
+                ) {
+
+                    try {
+
+                        await sendRawCommand(
+                            "GET_STATE"
+                        );
+
+                    }
+
+                    catch (
+                        error
+                    ) {
+
+                        addLog(
+                            "GET_STATE 失敗：" +
+                            error.message
+                        );
+                    }
+                }
+
+            },
+            800
+        );
+
+    }
+
+    catch (
+        error
+    ) {
+
+        port =
+            null;
+
+
+        showDisconnected();
+
+
+        connectionStatus.innerHTML =
+
+            '<span class="error">' +
+
+            '連線失敗：' +
+
+            error.message +
+
+            '</span>';
+
+
+        addLog(
+            "連線失敗：" +
+            error.message
+        );
+    }
+}
+
+
+// ==========================================================
+// 中斷 Serial
+// ==========================================================
+
+async function disconnectSerial(
+    reason = "manual"
+) {
+
+    // ------------------------------------------------------
+    // 本來就沒有連線
+    // ------------------------------------------------------
+
+    if (
+        !port &&
+        !reader
+    ) {
+
+        showDisconnected();
+
+
+        if (
+            reason === "voice"
+        ) {
+
+            commandStatus.innerHTML =
+
+                '<span class="warning">' +
+
+                '目前已經是通訊中斷狀態' +
+
+                '</span>';
+        }
+
+
+        return;
+    }
+
+
+    clearCommandTimeout();
+
+
+    commandPending =
+        false;
+
+
+    addLog(
+        reason === "voice"
+        ?
+        "語音指令：準備中斷 Serial"
+        :
+        "準備中斷 Serial"
+    );
+
+
+    // ------------------------------------------------------
+    // 取消 reader
+    // ------------------------------------------------------
+
+    try {
+
+        if (
+            reader
+        ) {
+
+            await reader.cancel();
+        }
+
+    }
+
+    catch (
+        error
+    ) {
+
+        addLog(
+            "Reader cancel：" +
+            error.message
+        );
+    }
+
+
+    // ------------------------------------------------------
+    // 關閉 port
+    // ------------------------------------------------------
+
+    try {
+
+        if (
+            port
+        ) {
+
+            await port.close();
+        }
+
+    }
+
+    catch (
+        error
+    ) {
+
+        addLog(
+            "Port close：" +
+            error.message
+        );
+    }
+
+
+    reader =
+        null;
+
+
+    port =
+        null;
+
+
+    showDisconnected();
+
+
+    if (
+        reason === "voice"
+    ) {
+
+        commandStatus.innerHTML =
+
+            '<span class="success">' +
+
+            '語音指令執行成功：通訊已中斷' +
+
+            '</span>';
+
+
+        addLog(
+            "語音指令執行成功：通訊已中斷"
+        );
+    }
+
+    else {
+
+        commandStatus.innerHTML =
+
+            '<span class="success">' +
+
+            '通訊已中斷' +
+
+            '</span>';
+
+
+        addLog(
+            "Serial 已中斷"
+        );
+    }
+}
+
+
+// ==========================================================
+// Serial Reader
+// ==========================================================
+
+async function readSerial() {
+
+    if (
+        !port ||
+        !port.readable
+    ) {
+
+        return;
+    }
+
+
+    const decoder =
+        new TextDecoder();
+
+
+    reader =
+        port.readable
+        .getReader();
+
+
+    try {
+
+        while (
+            true
+        ) {
+
+            const {
+                value,
+                done
+            } =
+                await reader.read();
+
+
+            if (
+                done
+            ) {
+
+                break;
+            }
+
+
+            if (
+                !value
+            ) {
+
+                continue;
+            }
+
+
+            serialBuffer +=
+                decoder.decode(
+                    value,
+                    {
+                        stream:
+                            true
+                    }
+                );
+
+
+            let index;
+
+
+            // --------------------------------------------------
+            // 一行一行解析
+            // --------------------------------------------------
+
+            while (
+                (
+                    index =
+                    serialBuffer.indexOf(
+                        "\n"
+                    )
+                ) >= 0
+            ) {
+
+                let line =
+                    serialBuffer
+                    .substring(
+                        0,
+                        index
+                    )
+                    .trim();
+
+
+                serialBuffer =
+                    serialBuffer
+                    .substring(
+                        index + 1
+                    );
+
+
+                if (
+                    line.length > 0
+                ) {
+
+                    handleBoardMessage(
+                        line
+                    );
+                }
+            }
+        }
+
+    }
+
+    catch (
+        error
+    ) {
+
+        if (
+            port
+        ) {
+
+            commandStatus.innerHTML =
+
+                '<span class="error">' +
+
+                'Serial 接收失敗：' +
+
+                error.message +
+
+                '</span>';
+
+
+            addLog(
+                "Serial 接收失敗：" +
+                error.message
+            );
+        }
+    }
+
+    finally {
+
+        try {
+
+            if (
+                reader
+            ) {
+
+                reader.releaseLock();
+            }
+
+        }
+
+        catch (
+            error
+        ) {
+
+        }
+
+
+        reader =
+            null;
+    }
+}
+
+
+// ==========================================================
+// 處理 Ameba 回傳資料
+// ==========================================================
+
+function handleBoardMessage(
+    line
+) {
+
+    addLog(
+        "Ameba → PC : " +
+        line
+    );
+
+
+    // ======================================================
+    // READY
+    // ======================================================
+
+    if (
+        line === "READY"
+    ) {
+
+        connectionStatus.innerHTML =
+
+            '<span class="success">' +
+
+            '● Ameba 已連線並就緒' +
+
+            '</span>';
+
+
+        return;
+    }
+
+
+    // ======================================================
+    // BLINK 開始
+    // ======================================================
+
+    if (
+        line ===
+        "EVENT BLINK_3_START"
+    ) {
+
+        commandStatus.innerHTML =
+
+            '<span class="warning">' +
+
+            'Ameba 正在閃爍三次...' +
+
+            '</span>';
+
+
+        return;
+    }
+
+
+    // ======================================================
+    // STATE / ACK
+    //
+    // 只要裡面有 BLUE GREEN，
+    // 就使用 Ameba 回傳資料更新畫面。
+    // ======================================================
+
+    if (
+        line.startsWith(
+            "STATE"
+        )
+        ||
+        line.startsWith(
+            "ACK"
+        )
+    ) {
+
+        const match =
+            line.match(
+                /BLUE=(\d+)\s+GREEN=(\d+)/
+            );
+
+
+        if (
+            match
+        ) {
+
+            const blue =
+                match[1] === "1";
+
+
+            const green =
+                match[2] === "1";
+
+
+            updateLEDDisplay(
+                blue,
+                green
+            );
+        }
+    }
+
+
+    // ======================================================
+    // ACK
+    // ======================================================
+
+    if (
+        line.startsWith(
+            "ACK"
+        )
+    ) {
+
+        clearCommandTimeout();
+
+
+        commandPending =
+            false;
+
+
+        // LEFT ON
+
+        if (
+            line.includes(
+                "LEFT_ON"
+            )
+        ) {
+
+            commandStatus.innerHTML =
+
+                '<span class="success">' +
+
+                '執行成功：左邊藍燈已開啟' +
+
+                '</span>';
+        }
+
+
+        // LEFT OFF
+
+        else if (
+            line.includes(
+                "LEFT_OFF"
+            )
+        ) {
+
+            commandStatus.innerHTML =
+
+                '<span class="success">' +
+
+                '執行成功：左邊藍燈已關閉' +
+
+                '</span>';
+        }
+
+
+        // RIGHT ON
+
+        else if (
+            line.includes(
+                "RIGHT_ON"
+            )
+        ) {
+
+            commandStatus.innerHTML =
+
+                '<span class="success">' +
+
+                '執行成功：右邊綠燈已開啟' +
+
+                '</span>';
+        }
+
+
+        // RIGHT OFF
+
+        else if (
+            line.includes(
+                "RIGHT_OFF"
+            )
+        ) {
+
+            commandStatus.innerHTML =
+
+                '<span class="success">' +
+
+                '執行成功：右邊綠燈已關閉' +
+
+                '</span>';
+        }
+
+
+        // BLINK
+
+        else if (
+            line.includes(
+                "BLINK_3"
+            )
+        ) {
+
+            commandStatus.innerHTML =
+
+                '<span class="success">' +
+
+                '執行成功：LED 已閃爍三次並恢復原狀態' +
+
+                '</span>';
+        }
+
+
+        return;
+    }
+
+
+    // ======================================================
+    // ERROR
+    // ======================================================
+
+    if (
+        line.startsWith(
+            "ERR"
+        )
+    ) {
+
+        clearCommandTimeout();
+
+
+        commandPending =
+            false;
+
+
+        commandStatus.innerHTML =
+
+            '<span class="error">' +
+
+            'Ameba 回報錯誤：' +
+
+            line +
+
+            '</span>';
+    }
+}
+
+
+// ==========================================================
+// 傳送原始 Serial 指令
+// ==========================================================
+
+async function sendRawCommand(
+    command
+) {
+
+    if (
+        !port ||
+        !port.writable
+    ) {
+
+        throw new Error(
+            "Ameba 尚未連線"
+        );
+    }
+
+
+    const writer =
+        port.writable
+        .getWriter();
+
+
+    try {
+
+        const encoder =
+            new TextEncoder();
+
+
+        await writer.write(
+
+            encoder.encode(
+                command +
+                "\n"
+            )
+
+        );
+
+
+        addLog(
+            "PC → Ameba : " +
+            command
+        );
+
+    }
+
+    finally {
+
+        writer.releaseLock();
+    }
+}
+
+
+// ==========================================================
+// 傳送控制命令
+// ==========================================================
+
+async function sendControlCommand(
+    command
+) {
+
+    if (
+        !port ||
+        !port.writable
+    ) {
+
+        commandStatus.innerHTML =
+
+            '<span class="error">' +
+
+            '通訊失敗：請先連接 Ameba' +
+
+            '</span>';
+
+
+        return;
+    }
+
+
+    // ------------------------------------------------------
+    // 前一個指令還沒完成
+    // ------------------------------------------------------
+
+    if (
+        commandPending
+    ) {
+
+        commandStatus.innerHTML =
+
+            '<span class="warning">' +
+
+            '上一個指令尚未完成，請稍候' +
+
+            '</span>';
+
+
+        return;
+    }
+
+
+    try {
+
+        commandPending =
+            true;
+
+
+        commandStatus.innerHTML =
+
+            '<span class="warning">' +
+
+            '指令已送出，等待 Ameba 執行...' +
+
+            '</span>';
+
+
+        await sendRawCommand(
+            command
+        );
+
+
+        // --------------------------------------------------
+        // 最長等 6 秒
+        // --------------------------------------------------
+
+        pendingTimer =
+            setTimeout(
+                () => {
+
+                    commandPending =
+                        false;
+
+
+                    commandStatus.innerHTML =
+
+                        '<span class="error">' +
+
+                        '通訊失敗：Ameba 未在 6 秒內回傳 ACK' +
+
+                        '</span>';
+
+
+                    addLog(
+                        "ACK Timeout : " +
+                        command
+                    );
+
+                },
+                6000
+            );
+
+    }
+
+    catch (
+        error
+    ) {
+
+        commandPending =
+            false;
+
+
+        clearCommandTimeout();
+
+
+        commandStatus.innerHTML =
+
+            '<span class="error">' +
+
+            '通訊失敗：' +
+
+            error.message +
+
+            '</span>';
+
+
+        addLog(
+            "送出失敗：" +
+            error.message
+        );
+    }
+}
+
+
+// ==========================================================
+// 清除 ACK Timeout
+// ==========================================================
+
+function clearCommandTimeout() {
+
+    if (
+        pendingTimer
+    ) {
+
+        clearTimeout(
+            pendingTimer
+        );
+
+
+        pendingTimer =
+            null;
+    }
+}
+
+
+// ==========================================================
+// Speech Recognition
+// ==========================================================
+
+const SpeechRecognition =
+
+    window.SpeechRecognition
+
+    ||
+
+    window.webkitSpeechRecognition;
+
+
+let recognition =
+    null;
+
+
+if (
+    SpeechRecognition
+) {
+
+    recognition =
+        new SpeechRecognition();
+
+
+    recognition.lang =
+        "zh-TW";
+
+
+    recognition.continuous =
+        false;
+
+
+    recognition.interimResults =
+        false;
+
+
+    recognition.maxAlternatives =
+        1;
+
+
+    // ======================================================
+    // 語音成功
+    // ======================================================
+
+    recognition.onresult =
+        async function(
+            event
+        ) {
+
+            const text =
+                event
+                .results[0][0]
+                .transcript
+                .trim();
+
+
+            speechResult.textContent =
+                text;
+
+
+            addLog(
+                "語音辨識：" +
+                text
+            );
+
+
+            await processSpeech(
+                text
+            );
+        };
+
+
+    // ======================================================
+    // 語音錯誤
+    // ======================================================
+
+    recognition.onerror =
+        function(
+            event
+        ) {
+
+            speechResult.textContent =
+                "辨識失敗";
+
+
+            let message =
+                "";
+
+
+            switch (
+                event.error
+            ) {
+
+                case "network":
+
+                    message =
+                        "語音辨識服務連線失敗";
+
+                    break;
+
+
+                case "not-allowed":
+
+                    message =
+                        "麥克風權限被拒絕";
+
+                    break;
+
+
+                case "audio-capture":
+
+                    message =
+                        "找不到麥克風";
+
+                    break;
+
+
+                case "no-speech":
+
+                    message =
+                        "沒有偵測到語音";
+
+                    break;
+
+
+                case "aborted":
+
+                    message =
+                        "語音辨識已取消";
+
+                    break;
+
+
+                default:
+
+                    message =
+                        "語音辨識錯誤：" +
+                        event.error;
+            }
+
+
+            commandStatus.innerHTML =
+
+                '<span class="error">' +
+
+                message +
+
+                '</span>';
+
+
+            addLog(
+                "語音辨識錯誤：" +
+                event.error
+            );
+        };
+
+
+    // ======================================================
+    // 開始辨識
+    // ======================================================
+
+    recognition.onstart =
+        function() {
+
+            speechResult.textContent =
+                "正在聆聽...";
+
+
+            commandStatus.innerHTML =
+
+                '<span class="warning">' +
+
+                '請說出控制指令' +
+
+                '</span>';
+
+
+            voiceButton.disabled =
+                true;
+        };
+
+
+    // ======================================================
+    // 結束辨識
+    // ======================================================
+
+    recognition.onend =
+        function() {
+
+            voiceButton.disabled =
+                false;
+        };
+}
+
+
+// ==========================================================
+// 語音指令解析
+// ==========================================================
+
+async function processSpeech(
+    text
+) {
+
+    // ======================================================
+    // 中文正規化
+    // ======================================================
+
+    let chineseText =
+        text
+        .replace(
+            /[，。！？、,.!?]/g,
+            ""
+        )
+        .replace(
+            /\s+/g,
+            ""
+        )
+        .trim();
+
+
+    // ------------------------------------------------------
+    // 三 -> 3
+    // ------------------------------------------------------
+
+    chineseText =
+        chineseText
+        .replace(
+            /三/g,
+            "3"
+        );
+
+
+    // ------------------------------------------------------
+    // 支援部分簡體字
+    // ------------------------------------------------------
+
+    chineseText =
+        chineseText
+        .replace(
+            /闪烁/g,
+            "閃爍"
+        )
+        .replace(
+            /闪/g,
+            "閃"
+        )
+        .replace(
+            /通讯/g,
+            "通訊"
+        )
+        .replace(
+            /断开/g,
+            "斷開"
+        )
+        .replace(
+            /关灯/g,
+            "關燈"
+        )
+        .replace(
+            /关闭/g,
+            "關閉"
+        );
+
+
+    // ======================================================
+    // English 正規化
+    // ======================================================
+
+    const englishText =
+        text
+        .toLowerCase()
+        .replace(
+            /[.,!?]/g,
+            ""
+        )
+        .replace(
+            /\s+/g,
+            " "
+        )
+        .trim();
+
+
+    addLog(
+        "中文正規化：" +
+        chineseText
+    );
+
+
+    addLog(
+        "English normalize：" +
+        englishText
+    );
+
+
+    // ======================================================
+    // 1. 通訊中斷
+    // ======================================================
+
+    const disconnectChinese = [
+
+        "通訊中斷",
+
+        "中斷通訊",
+
+        "中斷連線",
+
+        "斷開連線",
+
+        "斷開通訊",
+
+        "停止通訊",
+
+        "停止連線"
+
+    ];
+
+
+    const disconnectEnglish = [
+
+        "disconnect",
+
+        "disconnect communication",
+
+        "disconnect the communication",
+
+        "disconnect ameba",
+
+        "disconnect the ameba",
+
+        "disconnect serial",
+
+        "disconnect the serial",
+
+        "stop communication"
+
+    ];
+
+
+    if (
+        disconnectChinese.includes(
+            chineseText
+        )
+        ||
+        disconnectEnglish.includes(
+            englishText
+        )
+    ) {
+
+        commandStatus.innerHTML =
+
+            '<span class="warning">' +
+
+            '辨識到：通訊中斷 / Disconnect' +
+
+            '</span>';
+
+
+        addLog(
+            "辨識到通訊中斷指令"
+        );
+
+
+        await disconnectSerial(
+            "voice"
+        );
+
+
+        return;
+    }
+
+
+    // ======================================================
+    // 2. 左邊關燈
+    //
+    // 關燈判斷放在開燈之前。
+    // ======================================================
+
+    const leftOffChinese = [
+
+        "左邊關燈",
+
+        "左邊燈關",
+
+        "關左邊燈",
+
+        "關掉左邊燈",
+
+        "左邊關閉",
+
+        "關閉左邊燈"
+
+    ];
+
+
+    const leftOffEnglish = [
+
+        "turn off the left light",
+
+        "turn off left light",
+
+        "left light off",
+
+        "left off",
+
+        "switch off the left light",
+
+        "switch off left light"
+
+    ];
+
+
+    if (
+        leftOffChinese.includes(
+            chineseText
+        )
+        ||
+        leftOffEnglish.includes(
+            englishText
+        )
+    ) {
+
+        commandStatus.innerHTML =
+
+            '<span class="warning">' +
+
+            '辨識到：左邊關燈 / Left Light Off' +
+
+            '</span>';
+
+
+        await sendControlCommand(
+            "LEFT_OFF"
+        );
+
+
+        return;
+    }
+
+
+    // ======================================================
+    // 3. 右邊關燈
+    // ======================================================
+
+    const rightOffChinese = [
+
+        "右邊關燈",
+
+        "右邊燈關",
+
+        "關右邊燈",
+
+        "關掉右邊燈",
+
+        "右邊關閉",
+
+        "關閉右邊燈"
+
+    ];
+
+
+    const rightOffEnglish = [
+
+        "turn off the right light",
+
+        "turn off right light",
+
+        "right light off",
+
+        "right off",
+
+        "switch off the right light",
+
+        "switch off right light"
+
+    ];
+
+
+    if (
+        rightOffChinese.includes(
+            chineseText
+        )
+        ||
+        rightOffEnglish.includes(
+            englishText
+        )
+    ) {
+
+        commandStatus.innerHTML =
+
+            '<span class="warning">' +
+
+            '辨識到：右邊關燈 / Right Light Off' +
+
+            '</span>';
+
+
+        await sendControlCommand(
+            "RIGHT_OFF"
+        );
+
+
+        return;
+    }
+
+
+    // ======================================================
+    // 4. 左邊開燈
+    // ======================================================
+
+    const leftOnChinese = [
+
+        "左邊開燈",
+
+        "左邊燈開",
+
+        "左邊燈亮",
+
+        "開左邊燈",
+
+        "打開左邊燈"
+
+    ];
+
+
+    const leftOnEnglish = [
+
+        "turn on the left light",
+
+        "turn on left light",
+
+        "left light on",
+
+        "left on",
+
+        "switch on the left light",
+
+        "switch on left light"
+
+    ];
+
+
+    if (
+        leftOnChinese.includes(
+            chineseText
+        )
+        ||
+        leftOnEnglish.includes(
+            englishText
+        )
+    ) {
+
+        commandStatus.innerHTML =
+
+            '<span class="warning">' +
+
+            '辨識到：左邊開燈 / Left Light On' +
+
+            '</span>';
+
+
+        await sendControlCommand(
+            "LEFT_ON"
+        );
+
+
+        return;
+    }
+
+
+    // ======================================================
+    // 5. 右邊開燈
+    // ======================================================
+
+    const rightOnChinese = [
+
+        "右邊開燈",
+
+        "右邊燈開",
+
+        "右邊燈亮",
+
+        "開右邊燈",
+
+        "打開右邊燈"
+
+    ];
+
+
+    const rightOnEnglish = [
+
+        "turn on the right light",
+
+        "turn on right light",
+
+        "right light on",
+
+        "right on",
+
+        "switch on the right light",
+
+        "switch on right light"
+
+    ];
+
+
+    if (
+        rightOnChinese.includes(
+            chineseText
+        )
+        ||
+        rightOnEnglish.includes(
+            englishText
+        )
+    ) {
+
+        commandStatus.innerHTML =
+
+            '<span class="warning">' +
+
+            '辨識到：右邊開燈 / Right Light On' +
+
+            '</span>';
+
+
+        await sendControlCommand(
+            "RIGHT_ON"
+        );
+
+
+        return;
+    }
+
+
+    // ======================================================
+    // 6. 閃爍三次
+    // ======================================================
+
+    const blinkChinese = [
+
+        "閃爍3次",
+
+        "閃3次",
+
+        "燈閃3次",
+
+        "閃爍3下",
+
+        "閃3下",
+
+        "燈閃3下"
+
+    ];
+
+
+    const blinkEnglish = [
+
+        "blink three times",
+
+        "blink 3 times",
+
+        "blink three time",
+
+        "blink 3 time",
+
+        "flash three times",
+
+        "flash 3 times",
+
+        "blink three",
+
+        "blink 3"
+
+    ];
+
+
+    if (
+        blinkChinese.includes(
+            chineseText
+        )
+        ||
+        blinkEnglish.includes(
+            englishText
+        )
+    ) {
+
+        commandStatus.innerHTML =
+
+            '<span class="warning">' +
+
+            '辨識到：閃爍三次 / Blink Three Times' +
+
+            '</span>';
+
+
+        await sendControlCommand(
+            "BLINK_3"
+        );
+
+
+        return;
+    }
+
+
+    // ======================================================
+    // 非控制指令
+    //
+    // 不傳送任何 Serial 控制命令。
+    // ======================================================
+
+    commandStatus.innerHTML =
+
+        '<span class="warning">' +
+
+        '非控制指令，不改變 LED 狀態' +
+
+        '</span>';
+
+
+    addLog(
+        "沒有符合任何控制指令，不傳送 Serial"
+    );
+}
+
+
+// ==========================================================
+// Connect Button
+// ==========================================================
+
+connectButton.addEventListener(
+    "click",
+    connectSerial
+);
+
+
+// ==========================================================
+// Disconnect Button
+// ==========================================================
+
+disconnectButton.addEventListener(
+    "click",
+    function() {
+
+        disconnectSerial(
+            "manual"
+        );
+    }
+);
+
+
+// ==========================================================
+// Voice Button
+// ==========================================================
+
+voiceButton.addEventListener(
+    "click",
+    function() {
+
+        if (
+            !recognition
+        ) {
+
+            commandStatus.innerHTML =
+
+                '<span class="error">' +
+
+                '瀏覽器不支援 SpeechRecognition' +
+
+                '</span>';
+
+
+            return;
+        }
+
+
+        try {
+
+            recognition.lang =
+                languageSelect.value;
+
+
+            addLog(
+                "辨識語言：" +
+                recognition.lang
+            );
+
+
+            recognition.start();
+
+        }
+
+        catch (
+            error
+        ) {
+
+            commandStatus.innerHTML =
+
+                '<span class="error">' +
+
+                '無法啟動語音辨識：' +
+
+                error.message +
+
+                '</span>';
+        }
+    }
+);
+
+
+// ==========================================================
+// 手動：左邊開燈
+// ==========================================================
+
+testLeftOn.addEventListener(
+    "click",
+    async function() {
+
+        speechResult.textContent =
+            "手動測試：左邊開燈";
+
+
+        await sendControlCommand(
+            "LEFT_ON"
+        );
+    }
+);
+
+
+// ==========================================================
+// 手動：左邊關燈
+// ==========================================================
+
+testLeftOff.addEventListener(
+    "click",
+    async function() {
+
+        speechResult.textContent =
+            "手動測試：左邊關燈";
+
+
+        await sendControlCommand(
+            "LEFT_OFF"
+        );
+    }
+);
+
+
+// ==========================================================
+// 手動：右邊開燈
+// ==========================================================
+
+testRightOn.addEventListener(
+    "click",
+    async function() {
+
+        speechResult.textContent =
+            "手動測試：右邊開燈";
+
+
+        await sendControlCommand(
+            "RIGHT_ON"
+        );
+    }
+);
+
+
+// ==========================================================
+// 手動：右邊關燈
+// ==========================================================
+
+testRightOff.addEventListener(
+    "click",
+    async function() {
+
+        speechResult.textContent =
+            "手動測試：右邊關燈";
+
+
+        await sendControlCommand(
+            "RIGHT_OFF"
+        );
+    }
+);
+
+
+// ==========================================================
+// 手動：閃爍三次
+// ==========================================================
+
+testBlink.addEventListener(
+    "click",
+    async function() {
+
+        speechResult.textContent =
+            "手動測試：閃爍三次";
+
+
+        await sendControlCommand(
+            "BLINK_3"
+        );
+    }
+);
+
+
+// ==========================================================
+// 手動：通訊中斷
+// ==========================================================
+
+testDisconnect.addEventListener(
+    "click",
+    async function() {
+
+        speechResult.textContent =
+            "手動測試：通訊中斷";
+
+
+        await disconnectSerial(
+            "manual"
+        );
+    }
+);
+
+
+// ==========================================================
+// USB 被拔掉
+// ==========================================================
+
+if (
+    "serial" in navigator
+) {
+
+    navigator.serial
+    .addEventListener(
+        "disconnect",
+        function() {
+
+            clearCommandTimeout();
+
+
+            commandPending =
+                false;
+
+
+            port =
+                null;
+
+
+            reader =
+                null;
+
+
+            setLEDUnknown();
+
+
+            connectButton.disabled =
+                false;
+
+
+            disconnectButton.disabled =
+                true;
+
+
+            connectionStatus.innerHTML =
+
+                '<span class="error">' +
+
+                '● Ameba 已中斷連線' +
+
+                '</span>';
+
+
+            commandStatus.innerHTML =
+
+                '<span class="error">' +
+
+                '通訊失敗：Serial 裝置已中斷' +
+
+                '</span>';
+
+
+            addLog(
+                "USB Serial 裝置已中斷"
+            );
+        }
+    );
+}
+
+
+// ==========================================================
+// 初始化
+// ==========================================================
+
+window.addEventListener(
+    "load",
+    function() {
+
+        setLEDUnknown();
+
+
+        if (
+            !window.isSecureContext
+        ) {
+
+            addLog(
+                "警告：請使用 localhost 或 HTTPS 開啟網頁"
+            );
+        }
+
+
+        if (
+            !("serial" in navigator)
+        ) {
+
+            connectionStatus.innerHTML =
+
+                '<span class="error">' +
+
+                '瀏覽器不支援 Web Serial，' +
+
+                '請使用桌面版 Chrome / Edge' +
+
+                '</span>';
+        }
+
+
+        if (
+            !SpeechRecognition
+        ) {
+
+            speechResult.textContent =
+                "瀏覽器不支援語音辨識";
+        }
+    }
+);
+
+
+</script>
+
+
+</body>
+
+</html>
